@@ -1,0 +1,28 @@
+import java.security.*;
+import java.security.spec.*;
+import javax.crypto.*;
+import java.io.*;
+import java.util.Base64;
+
+public class Sender {
+
+    private PrivateKey senderPrivateKey;
+    private PublicKey senderPublicKey;
+    private PublicKey receiverPublicKey;
+    private String message;
+    private byte[] encryptedKey;
+    private byte[] encryptedMessage;
+    private byte[] macBytes;
+
+    private static final SecureRandom secureRandom = new SecureRandom();
+    private static final String RSA = "RSA";
+    private static final String AES = "AES";
+
+    public void generateKeyPair() throws Exception {
+        // Generate key pair
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(RSA);
+        keyPairGenerator.initialize(2048, secureRandom);
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+
+        senderPrivateKey = keyPair.getPrivate();
+        senderPublicKey = keyPair.getPublic();
