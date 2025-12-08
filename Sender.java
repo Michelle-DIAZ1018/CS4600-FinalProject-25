@@ -36,9 +36,11 @@ public class Sender {
         }
     }
 
-    try (FileOutputStream senderPublicKeyFile = new FileOutputStream("sender.public.key")) {
-            senderPublicKeyFile.write(Base64.getEncoder().encode(senderPublicKey.getEncoded()));
-        }
+    // set message
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
 
     // Encrypt message
     public void encryptMessage() throws Exception {
@@ -74,7 +76,36 @@ public class Sender {
         macBytes = mac.doFinal(message.getBytes());
     }
 
+    // write message to file
+    public void sendMessage() throws Exception {
+        try (FileOutputStream fos = new FileOutputStream("Transmitted_Data")) {
+            // Message
+            transmittedDataFile.write(Base64.getEncoder().encode(encryptedMessage));
+            transmittedDataFile.write('\n');
 
+            // Key
+            transmittedDataFile.write(Base64.getEncoder().encode(encryptedKey));
+            transmittedDataFile.write('\n');
 
+            // MAC
+            transmittedDataFile.write(Base64.getEncoder().encode(macBytes));
+            transmittedDataFile.write('\n');
+        }
+    }
 
+    public static void main(String[] args) throws Exception {
+        Sender sender = new Sender();
+        sender.generateKeyPair();
+        sender.setMessage("Hello World");
+        sender.encryptMessage();
+        sender.sendMessage();
+    }
+}
 
+/*
+ALGORITHMS USED: 
+RSA
+AES
+HMAC
+Base64
+*/
