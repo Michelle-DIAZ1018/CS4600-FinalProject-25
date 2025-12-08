@@ -1,7 +1,7 @@
+import java.io.*;
 import java.security.*;
 import java.security.spec.*;
 import javax.crypto.*;
-import java.io.*;
 import java.util.Base64;
 
 public class Sender {
@@ -26,3 +26,51 @@ public class Sender {
 
         senderPrivateKey = keyPair.getPrivate();
         senderPublicKey = keyPair.getPublic();
+
+        // Write sender keys        
+        try (FileOutputStream senderPrivateKeyFile = new FileOutputStream("sender.private.key")) {
+            senderPrivateKeyFile.write(Base64.getEncoder().encode(senderPrivateKey.getEncoded()));
+        }
+        try (FileOutputStream senderPublicKeyFile = new FileOutputStream("sender.public.key")) {
+            senderPublicKeyFile.write(Base64.getEncoder().encode(senderPublicKey.getEncoded()));
+        }
+    }
+
+    try (FileOutputStream senderPublicKeyFile = new FileOutputStream("sender.public.key")) {
+            senderPublicKeyFile.write(Base64.getEncoder().encode(senderPublicKey.getEncoded()));
+        }
+
+    // Encrypt message
+    public void encryptMessage() throws Exception {
+        try (FileInputStream receiverPublicKeyFile = new FileInputStream("receiver.public.key")) {
+            byte[] receiverPublicKeyBytes = new byte[receiverPublicKeyFile.available()];
+            receiverPublicKeyFile.read(receiverPublicKeyBytes);
+
+            byte[] decodedReceiverPublicKey = Base64.getDecoder().decode(receiverPublicKeyBytes);
+            X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(decodedReceiverPublicKey);
+
+            KeyFactory keyFactory = KeyFactory.getInstance(RSA, "SunRsaSign");
+            receiverPublicKey = keyFactory.generatePublic(pubKeySpec);
+        }
+
+    // generate aes key
+    KeyGenerator keyGen = KeyGenerator.getInstance(AES);
+    keyGen.init(256);
+    SecretKey aesKey = keyGen.generateKey();
+
+    // Encrypt message
+    Cipher aesCipher = Cipher.getInstance(AES);
+        aesCipher.init(Cipher.ENCRYPT_MODE, aesKey);
+        encryptedMessage = aesCipher.doFinal(message.getBytes());
+
+    // Encrypt aes key with the receiver pub key
+        Cipher rsaCipher = Cipher.getInstance(RSA);
+        rsaCipher.init(Cipher.ENCRYPT_MODE, receiverPublicKey);
+        encryptedKey = rsaCipher.doFinal(aesKey.getEncoded());
+
+
+
+
+
+
+
