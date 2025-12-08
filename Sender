@@ -55,7 +55,7 @@ public class Sender {
 
     // generate aes key
     KeyGenerator keyGen = KeyGenerator.getInstance(AES);
-    keyGen.init(256);
+    keyGen.init(secureRandom);
     SecretKey aesKey = keyGen.generateKey();
 
     // Encrypt message
@@ -68,7 +68,11 @@ public class Sender {
         rsaCipher.init(Cipher.ENCRYPT_MODE, receiverPublicKey);
         encryptedKey = rsaCipher.doFinal(aesKey.getEncoded());
 
-
+    // MAC
+    Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(aesKey);
+        macBytes = mac.doFinal(message.getBytes());
+    }
 
 
 
