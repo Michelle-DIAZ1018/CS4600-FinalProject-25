@@ -1,20 +1,20 @@
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.*;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.time.Instant;
 
 public class Receiver {
 
     public static void main(String[] args) {
         if (args.length != 2) {
-            System.out.println("Usage: java FlexibleReceiver <TransmittedFile> <PrivateKey>");
+            System.out.println("Usage: java Receiver <TransmittedFile> <PrivateKey>");
             return;
         }
 
@@ -49,7 +49,7 @@ public class Receiver {
             byte[] plaintext = decryptAES(ciphertext, aesKey, iv);
 
             String outputFile = "DecryptedMessage.txt";
-            Files.write(Paths.get(outputFile), plaintext);
+            writeBytesToFile(outputFile, plaintext);
 
             System.out.println("🎉 Decryption successful! Message saved to: " + outputFile);
             if (map.containsKey("sender")) System.out.println("Sender: " + map.get("sender"));
@@ -62,10 +62,10 @@ public class Receiver {
         }
     }
 
-    // Methods
+    // MEthods 
 
     private static HashMap<String, String> parseKeyValueFile(String path) throws Exception {
-        List<String> lines = Files.readAllLines(Paths.get(path));
+        List<String> lines = readAllLines(path);
         HashMap<String, String> map = new HashMap<>();
         for (String line : lines) {
             line = line.trim();
@@ -76,10 +76,38 @@ public class Receiver {
         return map;
     }
 
+    private static List<String> readAllLines(String path) throws IOException {
+        List<String> lines = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                lines.add(line);
+            }
+        }
+        return lines;
+    }
+
     private static PrivateKey loadPrivateKey(String path) throws Exception {
-        byte[] privBytes = Files.readAllBytes(Paths.get(path));
+        byte[] privBytes = readAllBytes(path);
         return KeyFactory.getInstance("RSA")
                 .generatePrivate(new PKCS8EncodedKeySpec(privBytes));
+    }
+
+    private static byte[] readAllBytes(String path) throws IOException {
+        File file = new File(path);
+        byte[] data = new byte[(int) file.length()];
+        try (FileInputStream fis = new FileInputStream(file)) {
+            if (fis.read(data) != data.length) {
+                throw new IOException("Failed to read entire file: " + path);
+            }
+        }
+        return data;
+    }
+
+    private static void writeBytesToFile(String path, byte[] data) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(path)) {
+            fos.write(data);
+        }
     }
 
     private static SecretKey decryptAESKey(String encryptedKeyB64, PrivateKey rsaKey) throws Exception {
