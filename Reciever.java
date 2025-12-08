@@ -22,19 +22,15 @@ public class Receiver {
         String privateKeyFile = args[1];
 
         try {
-            // 1. Read transmitted file into a flexible map
             HashMap<String, String> map = parseKeyValueFile(transmittedFile);
 
-            // 2. Load RSA private key
             PrivateKey privateKey = loadPrivateKey(privateKeyFile);
 
-            // 3. Find AES key from flexible key names
             String encryptedKeyB64 = map.getOrDefault("encryptedAESKey", map.get("aesKey"));
             if (encryptedKeyB64 == null) throw new Exception("No AES key found in transmitted file");
 
             SecretKey aesKey = decryptAESKey(encryptedKeyB64, privateKey);
 
-            // 4. Read IV and ciphertext (allow alternative names)
             byte[] iv = Base64.getDecoder().decode(
                     map.getOrDefault("iv", map.get("aesIV"))
             );
@@ -45,16 +41,13 @@ public class Receiver {
                     map.getOrDefault("hmac", map.get("mac"))
             );
 
-            // 5. Verify HMAC (flexible, same personalized salt)
             if (!verifyHMAC(aesKey, iv, ciphertext, receivedHmac)) {
                 System.err.println("[" + Instant.now() + "] HMAC verification failed! Message may be tampered.");
                 return;
             }
 
-            // 6. Decrypt AES message
             byte[] plaintext = decryptAES(ciphertext, aesKey, iv);
 
-            // 7. Save decrypted message
             String outputFile = "DecryptedMessage.txt";
             Files.write(Paths.get(outputFile), plaintext);
 
@@ -69,7 +62,7 @@ public class Receiver {
         }
     }
 
-    // ----------------- Modular Methods -----------------
+    // Methods
 
     private static HashMap<String, String> parseKeyValueFile(String path) throws Exception {
         List<String> lines = Files.readAllLines(Paths.get(path));
