@@ -51,7 +51,7 @@ public class Receiver {
             String outputFile = "DecryptedMessage.txt";
             writeBytesToFile(outputFile, plaintext);
 
-            System.out.println("🎉 Decryption successful! Message saved to: " + outputFile);
+            System.out.println("Decryption successful -- Message saved to: " + outputFile);
             if (map.containsKey("sender")) System.out.println("Sender: " + map.get("sender"));
             if (map.containsKey("timestamp")) System.out.println("Sent at: " + map.get("timestamp"));
             if (map.containsKey("messageType")) System.out.println("Message type: " + map.get("messageType"));
@@ -62,7 +62,6 @@ public class Receiver {
         }
     }
 
-    // MEthods 
 
     private static HashMap<String, String> parseKeyValueFile(String path) throws Exception {
         List<String> lines = readAllLines(path);
@@ -118,11 +117,10 @@ public class Receiver {
         return new SecretKeySpec(aesKeyBytes, "AES");
     }
 
+   
     private static boolean verifyHMAC(SecretKey aesKey, byte[] iv, byte[] ciphertext, byte[] receivedHmac) throws Exception {
-        MessageDigest sha = MessageDigest.getInstance("SHA-256");
-        sha.update("MyProjectSalt".getBytes());
-        sha.update(aesKey.getEncoded());
-        SecretKeySpec macKey = new SecretKeySpec(sha.digest(), "HmacSHA256");
+        // Use the AES key directly for HMAC
+        SecretKeySpec macKey = new SecretKeySpec(aesKey.getEncoded(), "HmacSHA256");
 
         Mac hmac = Mac.getInstance("HmacSHA256");
         hmac.init(macKey);
